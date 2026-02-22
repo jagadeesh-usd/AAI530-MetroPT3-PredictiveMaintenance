@@ -1,58 +1,83 @@
 # AAI-530 Final Project: IIoT Predictive Maintenance System
 
-**Course:** AAI-530: AI for IoT  
-**Student:** Jagadeesh kumar Sellappan  
+**Course:** AAI-530: AI for IoT
+**Student:** Jagadeesh Kumar Sellappan
+**University:** University of San Diego
 **Dataset:** MetroPT-3 (UCI Machine Learning Repository)
 
 ## Project Overview
-This project focuses on the design and implementation of a **Predictive Maintenance System** for Air Production Units (APU) on metro trains. In the manufacturing and transportation industries, unexpected compressor failures lead to costly downtime. This project simulates a real-world IoT pipeline that monitors sensor data to detect anomalies and forecast maintenance needs.
 
-### Key Objectives
-1.  **IoT System Design:** Develop a theoretical architecture for collecting, processing, and transmitting high-frequency sensor data from moving trains to the cloud.
-2.  **Anomaly Detection (Deep Learning):** Build a model (e.g., LSTM Autoencoder) to classify the system state as "Healthy" or "Failure" based on raw sensor telemetry.
-3.  **Predictive Analytics (Time-Series):** Create a regression model to forecast critical variables (e.g., Air Pressure) to anticipate threshold breaches.
-4.  **Visualization:** Present real-time status and historical trends via a Tableau Public dashboard.
+This project designs and implements a Predictive Maintenance System 
+for Air Production Units (APU) on metro trains using LSTM-based deep 
+learning. Two complementary models detect anomalies and forecast 
+compressor pressure to provide advance warning before failures occur.
+
+## Key Results
+
+- 4/4 failure events detected with 3–7 days advance warning
+- Model A threshold: 0.0280 (mean + 3σ)
+- Model B forecast: MAE 0.1378, R² 0.4168
+- Average lead time: 140.3 hours
 
 ## Dataset
-The project uses the **MetroPT-3 Dataset**, collected from a real operational metro train in Porto, Portugal.
-* **Source:** [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/791/metropt+3+dataset)
-* **Data Type:** Multivariate Time-Series
-* **Frequency:** 1Hz (1 second intervals)
-* **Sensors:** 15 variables including:
-    * `TP2` (Compressor Pressure)
-    * `TP3` (Pneumatic Panel Pressure)
-    * `H1` (Valve Pressure)
-    * `Motor_Current` (Ampere)
-    * `Oil_Temperature` (Celsius)
 
-## Theoretical IoT Architecture
-* **Sensors:** Analog pressure and temperature sensors (4-20mA) wired to the APU.
-* **Edge Device:** Onboard Industrial PC performing data aggregation and lightweight anomaly inference.
-* **Connectivity:** MQTT protocol over Cellular (4G/5G) for real-time alerts; Wi-Fi for bulk data offloading.
-* **Cloud/Storage:** Scalable data warehouse for historical analysis and model retraining.
+**MetroPT-3 Dataset** — real operational metro train, Porto, Portugal
+
+- Source: [UCI Machine Learning Repository](https://archive.ics.uci.edu/dataset/791/metropt+3+dataset)
+- Frequency: ~10-second intervals
+- Size: 1,516,948 observations (Feb–Sep 2020)
+- Resampled to: 1-minute intervals (306,960 rows)
+- Features: 7 continuous sensors + 8 binary signals
+
+## Notebooks
+
+| Notebook | Description |
+|---|---|
+| 01_EDA_and_Preprocessing.ipynb | Data exploration, validation, resampling |
+| 02_Model_A_Anomaly_Detection.ipynb | LSTM Autoencoder anomaly detection |
+| 03_Model_B_Forecasting.ipynb | LSTM Forecaster for TP2 pressure |
 
 ## Machine Learning Models
-This project implements two distinct machine learning tasks as required:
 
-### Model A: Anomaly Detection (Deep Learning)
-* **Goal:** Classify current system status as **Normal** or **Potential Failure**.
-* **Architecture:** Deep Neural Network (DNN) / LSTM built from scratch using TensorFlow/Keras.
-* **Input:** Rolling window of sensor readings (e.g., last 60 seconds).
+### Model A: LSTM Autoencoder (Anomaly Detection)
+- Architecture: LSTM(64)→Dropout(0.2)→LSTM(32)→RepeatVector→LSTM(32)→LSTM(64)→Dense(7)
+- Training: Healthy data only (Feb–Apr 2020)
+- Threshold: Mean + 3σ = 0.0280
 
-### Model B: Time-Series Forecasting
-* **Goal:** Predict the value of **Compressor Pressure (TP2)** for the next time horizon.
-* **Method:** Time-series regression (e.g., LSTM or ARIMA).
-* **Utility:** Allows operators to see if pressure is trending toward a safety cutoff.
+### Model B: LSTM Forecaster (Time-Series Prediction)
+- Architecture: LSTM(64)→Dropout(0.3)→LSTM(32)→Dropout(0.2)→Dense(16)→Dense(1)
+- Target: TP2 compressor pressure, 10 minutes ahead
+
+## IoT Architecture
+
+Four-layer IIoT design:
+1. Edge & Ingestion — Industrial sensors + AWS IoT Greengrass
+2. Real-Time Operations — AWS IoT Core + AWS Timestream (Hot Path)
+3. ML Pipeline — Snowflake + SageMaker (Cold Path)
+4. Visualization — Tableau Public Dashboard
 
 ## Dashboard
-The final insights are visualized on Tableau Public.
-* **Link:** 
-* **Visuals:**
-    * Real-time device status (Active/Warning).
-    * Historical pressure and temperature trends.
-    * Predicted failure probability vs. actual events.
 
-## How to Run the Code
+**Tableau Public:** [https://public.tableau.com/app/profile/jagadeesh.sellappan/viz/APUPredictiveMaintenanceDashboard/Dashboard1]
+
+Five visualizations:
+1. KPI Summary — Total failures detected, avg lead time
+2. Lead Time Summary — Warning hours per failure event
+3. Anomaly Detection — Reconstruction error vs threshold
+4. Historical System Health — Raw TP2 pressure timeline
+5. 10-Minute Pressure Forecast — Actual vs predicted TP2
+
+## How to Run
+
+1. Open notebooks in Google Colab
+2. Mount Google Drive
+3. Run cells in order: EDA → Model A → Model B
+
+## Requirements
+
+- Python 3.10
+- TensorFlow 2.x
+- pandas, NumPy, scikit-learn
+- matplotlib, seaborn
 
 ## License
-
